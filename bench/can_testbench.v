@@ -3067,5 +3067,11 @@ begin
 end
 */
 
+// FSDB
+initial begin
+    $fsdbDumpfile("tb_top.fsdb");
+    $fsdbDumpvars(0, can_testbench);
+end
+
 endmodule
 

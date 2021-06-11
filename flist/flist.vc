@@ -1,0 +1,17 @@
+../rtl/can_acf.v
+../rtl/can_bsp.v
+../rtl/can_btl.v
+../rtl/can_crc.v
+../rtl/can_defines.v
+../rtl/can_fifo.v
+../rtl/can_ibo.v
+../rtl/can_register_asyn_syn.v
+../rtl/can_register_asyn.v
+../rtl/can_registers.v
+../rtl/can_register.v
+../rtl/can_top.v
+
+../bench/can_testbench_defines.v
+../bench/can_testbench.v
+../bench/timescale.v
+

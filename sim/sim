@@ -2,11 +2,12 @@
 vcs +v2k -debug_all +rad -full64 \
 -P $NOVAS_HOME/share/PLI/VCS/LINUX64/verdi.tab \
    $NOVAS_HOME/share/PLI/VCS/LINUX64/pli.a \
-+incdir+../tb \
++incdir+../rtl \
++incdir+../bench \
 -f ../flist/flist.vc \
 -timescale=1ns/10ps \
 +notimingcheck \
 +nospecify \
 -l sim.log \
--top tb_top \
+-top can_testbench \
 -R \
