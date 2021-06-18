@@ -1212,7 +1212,7 @@ always @ (posedge clk or posedge rst)
 begin
   if (rst)
     error_cnt1 <= 3'd0;
-  else if (error_frame_ended | go_error_frame | go_overload_frame)
+  else if (set_reset_mode | error_frame_ended | go_error_frame | go_overload_frame)
     error_cnt1 <=#Tp 3'd0;
   else if (error_frame & tx_point & (error_cnt1 < 3'd7))
     error_cnt1 <=#Tp error_cnt1 + 1'b1;

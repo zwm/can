@@ -348,6 +348,8 @@ task bus_off_recovery_test2;
     write_register2(8'd23, 8'hbe); // tx registers
 
     write_register2(8'd1, 8'h1);  // tx request
+    //#380_000;
+    //write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
     // Wait until node 1 receives rx irq
     read_register(8'd3, tmp_data);
@@ -376,11 +378,14 @@ task bus_off_recovery_test2;
         // Waiting until node 1 starts transmitting
         wait (!tx_i);
         repeat (33) send_bit(1);
-        //repeat (330) send_bit(0);
-        //repeat (1) send_bit(1);
+        repeat (330) send_bit(0);
+        repeat (1) send_bit(1);
       end
 
     join
+
+    // clear rx_err_cnt, new added
+    write_register(8'd14, 8'h00);
 
     // Switch-off reset mode
     write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
