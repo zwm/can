@@ -1,1 +1,1 @@
-verdi +v2k +incdir+../bench +incdir+../rtl -f ../flist/flist.vc -top can_testbench &
+verdi +v2k +incdir+../bench +incdir+../rtl -f ../flist/flist.vc -ssf tb_top.fsdb -sswr can.rc -top can_testbench &
