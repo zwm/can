@@ -1,192 +1,3 @@
-//////////////////////////////////////////////////////////////////////
-////                                                              ////
-////  can_testbench.v                                             ////
-////                                                              ////
-////                                                              ////
-////  This file is part of the CAN Protocol Controller            ////
-////  http://www.opencores.org/projects/can/                      ////
-////                                                              ////
-////                                                              ////
-////  Author(s):                                                  ////
-////       Igor Mohor                                             ////
-////       igorm@opencores.org                                    ////
-////                                                              ////
-////                                                              ////
-////  All additional information is available in the README.txt   ////
-////  file.                                                       ////
-////                                                              ////
-//////////////////////////////////////////////////////////////////////
-////                                                              ////
-//// Copyright (C) 2002, 2003 Authors                             ////
-////                                                              ////
-//// This source file may be used and distributed without         ////
-//// restriction provided that this copyright statement is not    ////
-//// removed from the file and that any derivative work contains  ////
-//// the original copyright notice and the associated disclaimer. ////
-////                                                              ////
-//// This source file is free software; you can redistribute it   ////
-//// and/or modify it under the terms of the GNU Lesser General   ////
-//// Public License as published by the Free Software Foundation; ////
-//// either version 2.1 of the License, or (at your option) any   ////
-//// later version.                                               ////
-////                                                              ////
-//// This source is distributed in the hope that it will be       ////
-//// useful, but WITHOUT ANY WARRANTY; without even the implied   ////
-//// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      ////
-//// PURPOSE.  See the GNU Lesser General Public License for more ////
-//// details.                                                     ////
-////                                                              ////
-//// You should have received a copy of the GNU Lesser General    ////
-//// Public License along with this source; if not, download it   ////
-//// from http://www.opencores.org/lgpl.shtml                     ////
-////                                                              ////
-//// The CAN protocol is developed by Robert Bosch GmbH and       ////
-//// protected by patents. Anybody who wants to implement this    ////
-//// CAN IP core on silicon has to obtain a CAN protocol license  ////
-//// from Bosch.                                                  ////
-////                                                              ////
-//////////////////////////////////////////////////////////////////////
-//
-// CVS Revision History
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.41  2005/07/11 10:25:13  igorm
-// Fixing overrun problems.
-//
-// Revision 1.40  2004/03/18 17:39:17  igorm
-// I forgot to thange one signal name.
-//
-// Revision 1.39  2004/03/18 17:15:26  igorm
-// Signal bus_off_on added.
-//
-// Revision 1.38  2003/10/17 05:55:18  markom
-// mbist signals updated according to newest convention
-//
-// Revision 1.37  2003/09/30 20:53:58  mohor
-// Fixing the core to be Bosch VHDL Reference compatible.
-//
-// Revision 1.36  2003/08/20 10:03:20  mohor
-// Artisan RAMs added.
-//
-// Revision 1.35  2003/06/17 15:14:48  mohor
-// cs_can_i is used only when WISHBONE interface is not used.
-//
-// Revision 1.34  2003/03/26 11:25:39  mohor
-// CAN inturrupt is active low.
-//
-// Revision 1.33  2003/03/14 19:37:30  mohor
-// ALE changes on negedge of clk.
-//
-// Revision 1.32  2003/03/12 05:57:36  mohor
-// Bidirectional port_0_i changed to port_0_io.
-// input cs_can changed to cs_can_i.
-//
-// Revision 1.31  2003/03/12 04:40:00  mohor
-// rd_i and wr_i are active high signals. If 8051 is connected, these two signals
-// need to be negated one level higher.
-//
-// Revision 1.30  2003/03/12 04:16:40  mohor
-// 8051 interface added (besides WISHBONE interface). Selection is made in
-// can_defines.v file.
-//
-// Revision 1.29  2003/03/05 15:33:37  mohor
-// tx_o is now tristated signal. tx_oen and tx_o combined together.
-//
-// Revision 1.28  2003/03/05 15:00:49  mohor
-// Top level signal names changed.
-//
-// Revision 1.27  2003/03/01 22:48:26  mohor
-// Actel APA ram supported.
-//
-// Revision 1.26  2003/02/19 14:43:17  mohor
-// CAN core finished. Host interface added. Registers finished.
-// Synchronization to the wishbone finished.
-//
-// Revision 1.25  2003/02/18 00:19:39  mohor
-// Temporary backup version (still fully operable).
-//
-// Revision 1.24  2003/02/14 20:16:53  mohor
-// Several registers added. Not finished, yet.
-//
-// Revision 1.23  2003/02/12 14:28:30  mohor
-// Errors monitoring improved. arbitration_lost improved.
-//
-// Revision 1.22  2003/02/11 00:57:19  mohor
-// Wishbone interface added.
-//
-// Revision 1.21  2003/02/09 18:40:23  mohor
-// Overload fixed. Hard synchronization also enabled at the last bit of
-// interframe.
-//
-// Revision 1.20  2003/02/09 02:24:11  mohor
-// Bosch license warning added. Error counters finished. Overload frames
-// still need to be fixed.
-//
-// Revision 1.19  2003/02/04 17:24:33  mohor
-// Backup.
-//
-// Revision 1.18  2003/02/04 14:34:45  mohor
-// *** empty log message ***
-//
-// Revision 1.17  2003/01/31 01:13:31  mohor
-// backup.
-//
-// Revision 1.16  2003/01/16 13:36:14  mohor
-// Form error supported. When receiving messages, last bit of the end-of-frame
-// does not generate form error. Receiver goes to the idle mode one bit sooner.
-// (CAN specification ver 2.0, part B, page 57).
-//
-// Revision 1.15  2003/01/15 21:05:06  mohor
-// CRC checking fixed (when bitstuff occurs at the end of a CRC sequence).
-//
-// Revision 1.14  2003/01/15 14:40:16  mohor
-// RX state machine fixed to receive "remote request" frames correctly. No
-// data bytes are written to fifo when such frames are received.
-//
-// Revision 1.13  2003/01/15 13:16:42  mohor
-// When a frame with "remote request" is received, no data is stored to
-// fifo, just the frame information (identifier, ...). Data length that
-// is stored is the received data length and not the actual data length
-// that is stored to fifo.
-//
-// Revision 1.12  2003/01/14 17:25:03  mohor
-// Addresses corrected to decimal values (previously hex).
-//
-// Revision 1.11  2003/01/14 12:19:29  mohor
-// rx_fifo is now working.
-//
-// Revision 1.10  2003/01/10 17:51:28  mohor
-// Temporary version (backup).
-//
-// Revision 1.9  2003/01/09 21:54:39  mohor
-// rx fifo added. Not 100 % verified, yet.
-//
-// Revision 1.8  2003/01/08 02:09:43  mohor
-// Acceptance filter added.
-//
-// Revision 1.7  2002/12/28 04:13:53  mohor
-// Backup version.
-//
-// Revision 1.6  2002/12/27 00:12:48  mohor
-// Header changed, testbench improved to send a frame (crc still missing).
-//
-// Revision 1.5  2002/12/26 16:00:29  mohor
-// Testbench define file added. Clock divider register added.
-//
-// Revision 1.4  2002/12/26 01:33:01  mohor
-// Tripple sampling supported.
-//
-// Revision 1.3  2002/12/25 23:44:12  mohor
-// Commented lines removed.
-//
-// Revision 1.2  2002/12/25 14:16:54  mohor
-// Synchronization working.
-//
-// Revision 1.1.1.1  2002/12/20 16:39:21  mohor
-// Initial
-//
-//
-//
 
 // synopsys translate_off
 `include "timescale.v"
@@ -202,35 +13,19 @@ parameter Tp = 1;
 parameter BRP = 2*(`CAN_TIMING0_BRP + 1);
 
 
-`ifdef CAN_WISHBONE_IF
-  reg         wb_clk_i;
-  reg         wb_rst_i;
-  reg   [7:0] wb_dat_i;
-  wire  [7:0] wb_dat_o;
-  reg         wb_cyc_i;
-  reg         wb_stb_i;
-  reg         wb_we_i;
-  reg   [7:0] wb_adr_i;
-  wire        wb_ack_o;
-  reg         wb_free;
-`else
   reg         rst_i;
-  reg         ale_i;
   reg         rd_i;
   reg         wr_i;
-  reg         ale2_i;
   reg         rd2_i;
   reg         wr2_i;
-  wire  [7:0] port_0;
-  wire  [7:0] port_0_i;
-  reg   [7:0] port_0_o;
-  reg         port_0_en;
-  reg         port_free;
-`endif
+  reg   [7:0] addr;
+  reg   [7:0] data_in;
+  wire  [7:0] data_out;
+  reg   [7:0] addr2;
+  reg   [7:0] data_in2;
+  wire  [7:0] data_out2;
 
 
-reg         cs_can;
-reg         cs_can2;
 reg         clk;
 reg         rx;
 wire        tx;
@@ -252,25 +47,14 @@ event       igor;
 // Instantiate can_top module
 can_top i_can_top
 ( 
-`ifdef CAN_WISHBONE_IF
-  .wb_clk_i(wb_clk_i),
-  .wb_rst_i(wb_rst_i),
-  .wb_dat_i(wb_dat_i),
-  .wb_dat_o(wb_dat_o),
-  .wb_cyc_i(wb_cyc_i),
-  .wb_stb_i(wb_stb_i),
-  .wb_we_i(wb_we_i),
-  .wb_adr_i(wb_adr_i),
-  .wb_ack_o(wb_ack_o),
-`else
-  .cs_can_i(cs_can),
-  .rst_i(rst_i),
-  .ale_i(ale_i),
-  .rd_i(rd_i),
-  .wr_i(wr_i),
-  .port_0_io(port_0),
-`endif
-  .clk_i(clk),
+  .clk(clk),
+  .rst(rst_i),
+  .rd(rd_i),
+  .wr(wr_i),
+  .addr(addr),
+  .data_in(data_in),
+  .data_out(data_out),
+
   .rx_i(rx_and_tx),
   .tx_o(tx_i),
   .bus_off_on(bus_off_on),
@@ -291,25 +75,14 @@ can_top i_can_top
 // Instantiate can_top module 2
 can_top i_can_top2
 ( 
-`ifdef CAN_WISHBONE_IF
-  .wb_clk_i(wb_clk_i),
-  .wb_rst_i(wb_rst_i),
-  .wb_dat_i(wb_dat_i),
-  .wb_dat_o(wb_dat_o),
-  .wb_cyc_i(wb_cyc_i),
-  .wb_stb_i(wb_stb_i),
-  .wb_we_i(wb_we_i),
-  .wb_adr_i(wb_adr_i),
-  .wb_ack_o(wb_ack_o),
-`else
-  .cs_can_i(cs_can2),
-  .rst_i(rst_i),
-  .ale_i(ale2_i),
-  .rd_i(rd2_i),
-  .wr_i(wr2_i),
-  .port_0_io(port_0),
-`endif
-  .clk_i(clk),
+  .clk(clk),
+  .rst(rst_i),
+  .rd(rd2_i),
+  .wr(wr2_i),
+  .addr(addr2),
+  .data_in(data_in2),
+  .data_out(data_out2),
+
   .rx_i(rx_and_tx),
   .tx_o(tx2_i),
   .bus_off_on(bus_off2_on),
@@ -336,25 +109,6 @@ assign tx_tmp2 = bus_off2_on? tx2_i : 1'b1;
 
 assign tx = tx_tmp1 & tx_tmp2;
 
-
-
-`ifdef CAN_WISHBONE_IF
-  // Generate wishbone clock signal 10 MHz
-  initial
-  begin
-    wb_clk_i=0;
-    forever #50 wb_clk_i = ~wb_clk_i;
-  end
-`endif
-
-
-`ifdef CAN_WISHBONE_IF
-`else
-  assign port_0_i = port_0;
-  assign port_0 = port_0_en? port_0_o : 8'hz;
-`endif
-
-
 // Generate clock signal 25 MHz
 // Generate clock signal 16 MHz
 initial
@@ -368,37 +122,22 @@ end
 initial
 begin
   start_tb = 0;
-  cs_can = 0;
-  cs_can2 = 0;
   rx = 1;
   extended_mode = 0;
   tx_bypassed = 0;
 
-  `ifdef CAN_WISHBONE_IF
-    wb_dat_i = 'hz;
-    wb_cyc_i = 0;
-    wb_stb_i = 0;
-    wb_we_i = 'hz;
-    wb_adr_i = 'hz;
-    wb_free = 1;
-    wb_rst_i = 1;
-    #200 wb_rst_i = 0;
-    #200 start_tb = 1;
-  `else
     rst_i = 1'b0;
-    ale_i = 1'b0;
     rd_i  = 1'b0;
     wr_i  = 1'b0;
-    ale2_i = 1'b0;
+    addr = 0;
+    data_in = 0;
     rd2_i  = 1'b0;
     wr2_i  = 1'b0;
-    port_0_o = 8'h0;
-    port_0_en = 0;
-    port_free = 1;
+    addr2 = 0;
+    data_in2 = 0;
     rst_i = 1;
     #200 rst_i = 0;
     #200 start_tb = 1;
-  `endif
 end
 
 
@@ -494,7 +233,7 @@ begin
 //  manual_frame_ext;           // test currently switched off
 //    error_test;
 //    register_test;
-    bus_off_recovery_test;
+    bus_off_recovery_test2;
 
 
 /*
@@ -552,9 +291,118 @@ begin
 */
   #1000;
   $display("CAN Testbench finished !");
-  $stop;
+  $finish;
 end
 
+
+task bus_off_recovery_test2;
+  begin
+    -> igor;
+
+    // Switch-on reset mode
+    write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+    write_register2(8'd0, {7'h0, (`CAN_MODE_RESET)});
+
+    // Set Clock Divider register
+    extended_mode = 1'b1;
+    write_register(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
+    write_register2(8'd31, {extended_mode, 3'h0, 1'b0, 3'h0});   // Setting the normal mode (not extended)
+
+    write_register(8'd16, 8'h00); // acceptance code 0
+    write_register(8'd17, 8'h00); // acceptance code 1
+    write_register(8'd18, 8'h00); // acceptance code 2
+    write_register(8'd19, 8'h00); // acceptance code 3
+    write_register(8'd20, 8'hff); // acceptance mask 0
+    write_register(8'd21, 8'hff); // acceptance mask 1
+    write_register(8'd22, 8'hff); // acceptance mask 2
+    write_register(8'd23, 8'hff); // acceptance mask 3
+
+    write_register2(8'd16, 8'h00); // acceptance code 0
+    write_register2(8'd17, 8'h00); // acceptance code 1
+    write_register2(8'd18, 8'h00); // acceptance code 2
+    write_register2(8'd19, 8'h00); // acceptance code 3
+    write_register2(8'd20, 8'hff); // acceptance mask 0
+    write_register2(8'd21, 8'hff); // acceptance mask 1
+    write_register2(8'd22, 8'hff); // acceptance mask 2
+    write_register2(8'd23, 8'hff); // acceptance mask 3
+
+    // Switch-off reset mode
+    write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+    write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+
+    // Enable all interrupts
+    write_register(8'd4, 8'hff); // irq enable register
+
+    repeat (30) send_bit(1);
+    -> igor;
+    $display("(%0t) CAN should be idle now", $time);
+
+    // Node 2 sends a message
+    write_register2(8'd16, 8'h83); // tx registers
+    write_register2(8'd17, 8'h12); // tx registers
+    write_register2(8'd18, 8'h34); // tx registers
+    write_register2(8'd19, 8'h45); // tx registers
+    write_register2(8'd20, 8'h56); // tx registers
+    write_register2(8'd21, 8'hde); // tx registers
+    write_register2(8'd22, 8'had); // tx registers
+    write_register2(8'd23, 8'hbe); // tx registers
+
+    write_register2(8'd1, 8'h1);  // tx request
+
+    // Wait until node 1 receives rx irq
+    read_register(8'd3, tmp_data);
+    while (!(tmp_data & 8'h01)) begin
+      read_register(8'd3, tmp_data);
+    end
+
+    $display("Frame received by node 1.");
+
+    // Node 1 will send a message and will receive many errors
+    write_register(8'd16, 8'h83); // tx registers
+    write_register(8'd17, 8'h12); // tx registers
+    write_register(8'd18, 8'h34); // tx registers
+    write_register(8'd19, 8'h56); // tx registers
+    write_register(8'd20, 8'h78); // tx registers
+    write_register(8'd21, 8'hde); // tx registers
+    write_register(8'd22, 8'had); // tx registers
+    write_register(8'd23, 8'haa); // tx registers
+
+    fork 
+      begin
+        write_register(8'd1, 8'h1);  // tx request
+      end
+
+      begin
+        // Waiting until node 1 starts transmitting
+        wait (!tx_i);
+        repeat (33) send_bit(1);
+        //repeat (330) send_bit(0);
+        //repeat (1) send_bit(1);
+      end
+
+    join
+
+    // Switch-off reset mode
+    write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+    write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+
+    repeat (1999) send_bit(1);
+
+    // Switch-on reset mode
+    write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+    write_register2(8'd0, {7'h0, (`CAN_MODE_RESET)});
+
+    write_register(8'd14, 8'h0); // rx err cnt
+
+    // Switch-off reset mode
+    write_register(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+    write_register2(8'd0, {7'h0, ~(`CAN_MODE_RESET)});
+
+
+    // Wait some time before simulation ends
+    repeat (10000) @ (posedge clk);
+  end
+endtask // bus_off_recovery_test
 
 task bus_off_recovery_test;
   begin
@@ -2513,225 +2361,67 @@ endtask
 task read_register;
   input [7:0] reg_addr;
   output [7:0] data;
-
-  `ifdef CAN_WISHBONE_IF
     begin
-      wait (wb_free);
-      wb_free = 0;
-      @ (posedge wb_clk_i);
-      #1; 
-      cs_can = 1;
-      wb_adr_i = reg_addr;
-      wb_cyc_i = 1;
-      wb_stb_i = 1;
-      wb_we_i = 0;
-      wait (wb_ack_o);
-      $display("(%0t) Reading register [%0d] = 0x%0x", $time, wb_adr_i, wb_dat_o);
-      data = wb_dat_o;
-      @ (posedge wb_clk_i);
-      #1; 
-      wb_adr_i = 'hz;
-      wb_cyc_i = 0;
-      wb_stb_i = 0;
-      wb_we_i = 'hz;
-      cs_can = 0;
-      wb_free = 1;
-    end
-  `else
-    begin
-      wait (port_free);
-      port_free = 0;
       @ (posedge clk);
       #1;
-      cs_can = 1;
-      @ (negedge clk);
-      #1;
-      ale_i = 1;
-      port_0_en = 1;
-      port_0_o = reg_addr;
-      @ (negedge clk);
-      #1;
-      ale_i = 0;
-      #90;            // 73 - 103 ns
-      port_0_en = 0;
       rd_i = 1;
-      #158;
-      $display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.i_can_top.addr_latched, port_0_i);
-      data = port_0_i;
-      #1;
+      addr = reg_addr;
+      @ (posedge clk);
+      #2;
+      $display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.i_can_top.addr, data_out);
+      data = data_out;
       rd_i = 0;
-      cs_can = 0;
-      port_free = 1;
     end
-  `endif
 endtask
 
 
 task write_register;
   input [7:0] reg_addr;
   input [7:0] reg_data;
-
-  `ifdef CAN_WISHBONE_IF
-    begin
-      wait (wb_free);
-      wb_free = 0;
-      @ (posedge wb_clk_i);
-      #1; 
-      cs_can = 1;
-      wb_adr_i = reg_addr;
-      wb_dat_i = reg_data;
-      wb_cyc_i = 1;
-      wb_stb_i = 1;
-      wb_we_i = 1;
-      wait (wb_ack_o);
-      @ (posedge wb_clk_i);
-      #1; 
-      wb_adr_i = 'hz;
-      wb_dat_i = 'hz;
-      wb_cyc_i = 0;
-      wb_stb_i = 0;
-      wb_we_i = 'hz;
-      cs_can = 0;
-      wb_free = 1;
-    end
-  `else
     begin
       $display("(%0t) Writing register [%0d] with 0x%0x", $time, reg_addr, reg_data);
-      wait (port_free);
-      port_free = 0;
       @ (posedge clk);
       #1;
-      cs_can = 1;
-      @ (negedge clk);
-      #1;
-      ale_i = 1;
-      port_0_en = 1;
-      port_0_o = reg_addr;
-      @ (negedge clk);
-      #1;
-      ale_i = 0;
-      #90;            // 73 - 103 ns
-      port_0_o = reg_data;
       wr_i = 1;
-      #158;
+      addr = reg_addr;
+      data_in = reg_data;
+      @ (posedge clk);
+      #1;
       wr_i = 0;
-      port_0_en = 0;
-      cs_can = 0;
-      port_free = 1;
     end
-  `endif
 endtask
 
 
 task read_register2;
   input [7:0] reg_addr;
   output [7:0] data;
-
-  `ifdef CAN_WISHBONE_IF
-    begin
-      wait (wb_free);
-      wb_free = 0;
-      @ (posedge wb_clk_i);
-      #1; 
-      cs_can = 1;
-      wb_adr_i = reg_addr;
-      wb_cyc_i = 1;
-      wb_stb_i = 1;
-      wb_we_i = 0;
-      wait (wb_ack_o);
-      $display("(%0t) Reading register [%0d] = 0x%0x", $time, wb_adr_i, wb_dat_o);
-      data = wb_dat_o;
-      @ (posedge wb_clk_i);
-      #1; 
-      wb_adr_i = 'hz;
-      wb_cyc_i = 0;
-      wb_stb_i = 0;
-      wb_we_i = 'hz;
-      cs_can = 0;
-      wb_free = 1;
-    end
-  `else
-    begin
-      wait (port_free);
-      port_free = 0;
+  begin
       @ (posedge clk);
       #1;
-      cs_can2 = 1;
-      @ (negedge clk);
-      #1;
-      ale2_i = 1;
-      port_0_en = 1;
-      port_0_o = reg_addr;
-      @ (negedge clk);
-      #1;
-      ale2_i = 0;
-      #90;            // 73 - 103 ns
-      port_0_en = 0;
       rd2_i = 1;
-      #158;
-      $display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.i_can_top.addr_latched, port_0_i);
-      data = port_0_i;
-      #1;
+      addr2 = reg_addr;
+      @ (posedge clk);
+      #2;
+      $display("(%0t) Reading register [%0d] = 0x%0x", $time, can_testbench.i_can_top2.addr, data_out2);
+      data = data_out2;
       rd2_i = 0;
-      cs_can2 = 0;
-      port_free = 1;
-    end
-  `endif
+  end
 endtask
-
 
 task write_register2;
   input [7:0] reg_addr;
   input [7:0] reg_data;
-
-  `ifdef CAN_WISHBONE_IF
     begin
-      wait (wb_free);
-      wb_free = 0;
-      @ (posedge wb_clk_i);
-      #1; 
-      cs_can = 1;
-      wb_adr_i = reg_addr;
-      wb_dat_i = reg_data;
-      wb_cyc_i = 1;
-      wb_stb_i = 1;
-      wb_we_i = 1;
-      wait (wb_ack_o);
-      @ (posedge wb_clk_i);
-      #1; 
-      wb_adr_i = 'hz;
-      wb_dat_i = 'hz;
-      wb_cyc_i = 0;
-      wb_stb_i = 0;
-      wb_we_i = 'hz;
-      cs_can = 0;
-      wb_free = 1;
-    end
-  `else
-    begin
-      wait (port_free);
-      port_free = 0;
+      $display("(%0t) Writing register [%0d] with 0x%0x", $time, reg_addr, reg_data);
       @ (posedge clk);
       #1;
-      cs_can2 = 1;
-      @ (negedge clk);
-      #1;
-      ale2_i = 1;
-      port_0_en = 1;
-      port_0_o = reg_addr;
-      @ (negedge clk);
-      #1;
-      ale2_i = 0;
-      #90;            // 73 - 103 ns
-      port_0_o = reg_data;
       wr2_i = 1;
-      #158;
+      addr2 = reg_addr;
+      data_in2 = reg_data;
+      @ (posedge clk);
+      #1;
       wr2_i = 0;
-      port_0_en = 0;
-      cs_can2 = 0;
-      port_free = 1;
     end
-  `endif
 endtask
 
 
@@ -2994,7 +2684,7 @@ begin
     begin
       $display("(%0t) ERROR multiple go_sync, go_seg1 or go_seg2 occurance\n\n", $time);
       #1000;
-      $stop;
+      $finish;
     end
 
   if(can_testbench.i_can_top.i_can_btl.sync & can_testbench.i_can_top.i_can_btl.seg1 | can_testbench.i_can_top.i_can_btl.sync & can_testbench.i_can_top.i_can_btl.seg2 | 
@@ -3002,7 +2692,7 @@ begin
     begin
       $display("(%0t) ERROR multiple sync, seg1 or seg2 occurance\n\n", $time);
       #1000;
-      $stop;
+      $finish;
     end
 end
 
@@ -3012,7 +2702,7 @@ begin
   if(can_testbench.i_can_top.i_can_bsp.stuff_error)
     begin
       $display("\n\n(%0t) Stuff error occured in can_bsp.v file\n\n", $time);
-      $stop;                                      After everything is finished add another condition (something like & (~idle)) and enable stop
+      $finish;                                      After everything is finished add another condition (something like & (~idle)) and enable finish
     end
 end
 */
