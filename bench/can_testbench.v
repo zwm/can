@@ -378,11 +378,14 @@ task bus_off_recovery_test2;
         // Waiting until node 1 starts transmitting
         wait (!tx_i);
         repeat (33) send_bit(1);
-        repeat (330) send_bit(0);
+        //repeat (330) send_bit(0);
+        repeat (30) send_bit(0);
         repeat (1) send_bit(1);
       end
 
     join
+
+    #10_000_000;
 
     // clear rx_err_cnt, new added
     write_register(8'd14, 8'h00);
@@ -1783,18 +1786,18 @@ task send_frame_extended;    // CAN IP core sends basic or extended frames in ex
 
       end
 
-      begin
-        # 344000;
+      //begin
+      //  # 344000;
 
-        // Switch-on reset mode
-        $display("expect: SW reset ON\n");
-        write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
+      //  // Switch-on reset mode
+      //  $display("expect: SW reset ON\n");
+      //  write_register(8'd0, {7'h0, (`CAN_MODE_RESET)});
 
-        #40000;
-        // Switch-off reset mode
-        $display("expect: SW reset OFF\n");
-        write_register(8'd0, {7'h0, (~`CAN_MODE_RESET)});
-      end
+      //  #40000;
+      //  // Switch-off reset mode
+      //  $display("expect: SW reset OFF\n");
+      //  write_register(8'd0, {7'h0, (~`CAN_MODE_RESET)});
+      //end
 
     join
 
