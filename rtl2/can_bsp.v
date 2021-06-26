@@ -111,8 +111,8 @@ module can_bsp (
     output                          bus_off_on     // final output
 );
 
+// macro
 parameter Tp = 1;
-
 localparam ST_RESET                 = 5'd0;
 localparam ST_INTEG                 = 5'd1;
 localparam ST_BUS_OFF               = 5'd2;
@@ -135,15 +135,84 @@ localparam ST_SUSPEND               = 5'd18;
 localparam ST_ERR_FLAG              = 5'd19;
 localparam ST_ERR_WAIT              = 5'd20;
 localparam ST_ERR_DELI              = 5'd21;
-localparam ST_OVFL_FLAG             = 5'd22;
-localparam ST_OVFL_WAIT             = 5'd23;
-localparam ST_OVFL_DELI             = 5'd24;
+localparam ST_OVLD_FLAG             = 5'd22;
+localparam ST_OVLD_WAIT             = 5'd23;
+localparam ST_OVLD_DELI             = 5'd24;
 
-tx_next
-
+// 
 reg [4:0] st_next, st_curr;
+wire samp_vld, samp_high, samp_low;
+reg [5:0] cnt; wire cnt_clr, cnt_inc;
+wire integ_end, reinteg_end, id1_end, id2_end, dlc_end, data_end, crc_end, eof_end, inter_end, suspend_end;
+wire err_flag_end, err_wait_end, err_deli_end, ovld_flag_end, ovld_wait_end, ovld_deli_end;
 
-wire integ_end, reinteg_end;
+// sample
+assign samp_high                    = sample_point & sampled_bit;
+assign samp_low                     = sample_point & (~sampled_bit);
+
+// cnt_clr
+assign cnt_clr = (st_curr != ST_INTEG       && st_next == ST_INTEG)         |   // ST_INTEG
+                 (st_curr == ST_INTEG       && samp_low)                    |   // ST_INTEG, sample dominant
+                 (st_curr == ST_INTEG       && integ_end)                   |   // ST_INTEG, sample dominant
+                 (st_curr != ST_REINTEG     && st_next == ST_REINTEG)       |   // ST_REINTEG
+                 (st_curr == ST_REINTEG     && samp_low)                    |   // ST_REINTEG, sample dominant
+                 (st_curr == ST_REINTEG     && integ_end)                   |   // ST_INTEG, sample dominant
+                 (st_curr != ST_ID1         && st_next == ST_ID1)           |   // ST_ID1
+                 (st_curr != ST_ID2         && st_next == ST_ID2)           |   // ST_ID2
+                 (st_curr != ST_DLC         && st_next == ST_DLC)           |   // ST_DLC
+                 (st_curr != ST_DATA        && st_next == ST_DATA)          |   // ST_DATA
+                 (st_curr != ST_CRC         && st_next == ST_CRC)           |   // ST_CRC
+                 (st_curr != ST_EOF         && st_next == ST_EOF)           |   // ST_EOF
+                 (st_curr != ST_INTER       && st_next == ST_INTER)         |   // ST_INTER
+                 (st_curr != ST_SUSPEND     && st_next == ST_SUSPEND)       |   // ST_SUSPEND
+                 (st_curr != ST_ERR_FLAG    && st_next == ST_ERR_FLAG)      |   // ST_ERR_FLAG
+                 (st_curr != ST_ERR_WAIT    && st_next == ST_ERR_WAIT)      |   // ST_ERR_WAIT
+                 (st_curr != ST_ERR_DELI    && st_next == ST_ERR_DELI)      |   // ST_ERR_DELI
+                 (st_curr != ST_OVLD_FLAG   && st_next == ST_OVLD_FLAG)     |   // ST_OVLD_FLAG
+                 (st_curr != ST_OVLD_WAIT   && st_next == ST_OVLD_WAIT)     |   // ST_OVLD_WAIT
+                 (st_curr != ST_OVLD_DELI   && st_next == ST_OVLD_DELI);        // ST_OVLD_DELI
+// cnt_inc
+assign cnt_inc = sample_point && (  st_curr == ST_INTEG                     |   // ST_INTEG
+                                    st_curr == ST_REINTEG                   |   // ST_REINTEG
+                                    st_curr == ST_ID1                       |   // ST_ID1
+                                    st_curr == ST_ID2                       |   // ST_ID2
+                                    st_curr == ST_DLC                       |   // ST_DLC
+                                    st_curr == ST_DATA                      |   // ST_DATA
+                                    st_curr == ST_CRC                       |   // ST_CRC
+                                    st_curr == ST_EOF                       |   // ST_EOF
+                                    st_curr == ST_INTER                     |   // ST_INTER
+                                    st_curr == ST_SUSPEND                   |   // ST_SUSPEND
+                                    st_curr == ST_ERR_FLAG                  |   // ST_ERR_FLAG
+                                    st_curr == ST_ERR_WAIT                  |   // ST_ERR_WAIT
+                                    st_curr == ST_ERR_DELI                  |   // ST_ERR_DELI
+                                    st_curr == ST_OVLD_FLAG                 |   // ST_OVLD_FLAG
+                                    st_curr == ST_OVLD_WAIT                 |   // ST_OVLD_WAIT
+                                    st_curr == ST_OVLD_DELI                 );  // ST_OVLD_DELI
+
+// cnt
+always @(posedge clk or negedge rstn)
+    if (~rstn)
+        cnt <= 0;
+    else if (reset_mode | cnt_clr)
+        cnt <= 0;
+    else if (cnt_inc)
+        cnt <= cnt + 1;
+// end_flag
+assign integ_end                    = cnt == 10;
+assign id1_end                      = cnt == 10;
+assign id2_end                      = cnt == 17;
+assign dlc_end                      = cnt == 3;
+assign data_end                     = (byte_cnt == dlc) && (bit_cnt == 7); // ???
+assign crc_end                      = cnt == 14;
+assign eof_end                      = cnt == 6;
+assign inter_end                    = cnt == 2;
+assign suspend_end                  = cnt == 7;
+assign err_flag_end                 = cnt == 5;
+assign err_wait_end                 = cnt == 5;
+assign err_deli_end                 = cnt == 7;
+assign ovld_flag_end                = cnt == 5;
+assign ovld_wait_end                = cnt == 5;
+assign ovld_deli_end                = cnt == 7;
 
 /////////////////////////////////////////////////////////////////////////////////
 // FSM
@@ -257,75 +326,92 @@ always @(*) begin
                     st_next = ST_INTER;
             end
             ST_INTER: begin
-                if (inter_last_bit) begin // ???
+                if (inter_end) begin // last bit of inter
                     if (~sampled_bit) // sof
                         st_next = ST_ID1;
-                    else if (error_passive && tx_state) // tbd
+                    else if (error_passive && is_transmitter) // ???
                         st_next = ST_SUSPEND;
                     else
                         st_next = ST_IDLE;
                 end
-                else if (inter_1st_2nd_bit) begin // ???
-                    if (~sampled_bit)
-                        st_next = ST_OVFL_FLAG;
+                else begin
+                    if (~sampled_bit) // go integ???
+                        st_next = ST_OVLD_FLAG;
                 end
             end
             ST_SUSPEND: begin
-                if (sample_point & ~sampled_bit) // sof
+                if (samp_low) // sof
                     st_next = ST_ID1;
-                else if (suspend_end)
+                else if (suspend_end) // do not send when SUSPEND
                     st_next = ST_IDLE;
             end
+            // error frame
             ST_ERR_FLAG: begin
                 if (err_flag_end)
                     st_next = ST_ERR_WAIT;
             end
             ST_ERR_WAIT: begin
-                if (sample_point & sampled_bit) // recessive
+                if (samp_high)
                     st_next = ST_ERR_DELI;
                 else if (err_wait_end)
                     st_next = ST_ERR_TOO_LONG;
             end
             ST_ERR_TOO_LONG: begin
-                if (sample_point & sampled_bit) // recessive
+                if (samp_high)
                     st_next = ST_ERR_DELI;
             end
             ST_ERR_DELI: begin
                 if (err_deli_end) begin
                     if (~sampled_bit)
-                        st_next = ST_OVFL_FLAG;
+                        st_next = ST_OVLD_FLAG;
                     else
                         st_next = ST_INTER;
                 end
             end
-            ST_OVFL_FLAG: begin
+            // overload frame
+            ST_OVLD_FLAG: begin
                 if (ovfl_flag_end)
-                    st_next = ST_OVFL_WAIT;
+                    st_next = ST_OVLD_WAIT;
             end
-            ST_OVFL_WAIT: begin
-                if (sample_point & sampled_bit) // recessive
-                    st_next = ST_OVFL_DELI;
+            ST_OVLD_WAIT: begin
+                if (samp_high)
+                    st_next = ST_OVLD_DELI;
                 else if (ovfl_wait_end)
-                    st_next = ST_OVFL_TOO_LONG;
+                    st_next = ST_OVLD_TOO_LONG;
             end
-            ST_OVFL_TOO_LONG: begin
-                if (sample_point & sampled_bit) // recessive
-                    st_next = ST_OVFL_DELI;
+            ST_OVLD_TOO_LONG: begin
+                if (samp_high)
+                    st_next = ST_OVLD_DELI;
             end
-            ST_OVFL_DELI: begin
+            ST_OVLD_DELI: begin
                 if (ovfl_deli_end) begin
                     if (~sampled_bit)
-                        st_next = ST_OVFL_FLAG; // ????
+                        st_next = ST_OVLD_FLAG;
                     else
                         st_next = ST_INTER;
                 end
             end
+            // default
             default: begin
                 st_next = ST_RESET;
             end
         endcase
     end
 end
+
+/////////////////////////////////////////////////////////////////////////////////
+// RECEIVE
+/////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// TRANSMIT
+/////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 reg           reset_mode_q;
